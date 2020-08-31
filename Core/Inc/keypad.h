@@ -45,6 +45,7 @@ typedef struct {
 void init_keypad(TipoTeclado *p_keypad);
 void next_col(TipoTeclado *p_keypad);
 int key_press(TipoTeclado *p_keypad);
+void key_process(int ch);
 void reset_key_press(TipoTeclado *p_keypad);
 
 #endif /* INC_KEYPAD_H_ */

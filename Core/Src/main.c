@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "eth.h"
 #include "tim.h"
 #include "usart.h"
@@ -33,6 +34,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include "keypad.h"
+#include "driver_HC_SR04.h"
+#include "driver_temperature.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -67,8 +70,8 @@ uint32_t captures[2];
 uint8_t Is_First_Captured = 0;
 uint16_t diffCapture = 0;
 volatile uint8_t captureDone = 0;
-double frequency = 0;
-double distanciacm  = 0;
+double distanciam = 0;
+float temperatura = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,7 +119,9 @@ int main(void)
   MX_TIM6_Init();
   MX_TIM7_Init();
   MX_TIM3_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+
  // HAL_TIM_Base_Start_IT(&htim6);
  // HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
   /* USER CODE END 2 */
@@ -130,19 +135,15 @@ int main(void)
     /* USER CODE BEGIN 3 */
 	  if (captureDone != 0) {
 		  captureDone = 0;
-		  frequency = 108* pow(10,6)/ (htim3.Instance->PSC + 1);
-		  frequency = (float) frequency / diffCapture;
-		  distanciacm = ((1/frequency) * pow(10,6))/58;
-		  sprintf(str_name, "%s\t%f","Distancia en cm =",distanciacm);
+		  distanciam = HC_SR04_get_distance(diffCapture);
+		  sprintf(str_name, "%s\t%f","Distancia en m =",distanciam);
+
 	}
+
 //	  if(key_press(&teclado)){
-//
-//		  sprintf(str_name, "%s\t%d","letra =",key_pad[teclado.teclaPulsada.row][teclado.teclaPulsada.col]);
-//		  if (teclado.teclaPulsada.row == ROW_1  && teclado.teclaPulsada.col == COL_1 ){
-//			  HAL_TIM_Base_Start_IT(&htim7);
-//			  HAL_GPIO_WritePin(TRIG_HC_SR04_GPIO_Port, TRIG_HC_SR04_Pin, GPIO_PIN_SET);
-//		  }
-//		  reset_key_press(&teclado);
+//		key_process(key_pad[teclado.teclaPulsada.row][teclado.teclaPulsada.col])
+//		sprintf(str_name, "%s\t%d","letra =",key_pad[teclado.teclaPulsada.row][teclado.teclaPulsada.col]);
+//		reset_key_press(&teclado);
 //	  }
 	  if (FLAG_ENVIO == true){
 		  enviar();
@@ -197,7 +198,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
   {
@@ -227,9 +228,10 @@ void enviar(){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if(GPIO_Pin == User_booton_Pin){
-		 HAL_TIM_Base_Start_IT(&htim7);
-		HAL_GPIO_WritePin(TRIG_HC_SR04_GPIO_Port, TRIG_HC_SR04_Pin, GPIO_PIN_SET);
-		//FLAG_ENVIO = true;
+		//HC_SR04_Start_trigger();
+		temperatura = get_temperature_value();
+		sprintf(str_name, "%s\t%f","Temperatura PCB =",temperatura);
+		FLAG_ENVIO = true;
 	}else if(GPIO_Pin == ROW1_Pin){
 		teclado.teclaPulsada.row = ROW_1;
 
@@ -272,6 +274,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
 			Is_First_Captured = 0; // set it back to false
 			HAL_TIM_IC_Stop_IT(&htim3, TIM_CHANNEL_1);
 			captureDone = 1;
+
 			FLAG_ENVIO = true;
 			// set polarity to rising edge, only if don't have both capture
 			//__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_2, TIM_INPUTCHANNELPOLARITY_RISING);
@@ -304,9 +307,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 		next_col(&teclado);
 
 	}else if (htim->Instance==TIM7){
-		  HAL_GPIO_WritePin(TRIG_HC_SR04_GPIO_Port, TRIG_HC_SR04_Pin, GPIO_PIN_RESET);
-		  HAL_TIM_Base_Stop_IT(&htim7);
-		  HAL_TIM_IC_Start_IT(&htim3, TIM_CHANNEL_1);
+		HC_SR04_Stop_trigger();
+
 	}
 
 }

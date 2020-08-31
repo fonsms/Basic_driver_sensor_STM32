@@ -1,0 +1,3 @@
+driver_HC_SR04.c:19:6:HC_SR04_Start_trigger	8	static
+driver_HC_SR04.c:23:6:HC_SR04_Stop_trigger	8	static
+driver_HC_SR04.c:28:8:HC_SR04_get_distance	16	static

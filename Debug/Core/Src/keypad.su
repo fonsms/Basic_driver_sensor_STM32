@@ -2,3 +2,4 @@ keypad.c:22:6:init_keypad	16	static
 keypad.c:37:6:next_col	16	static
 keypad.c:60:5:key_press	16	static
 keypad.c:67:6:reset_key_press	16	static
+keypad.c:71:6:key_process	16	static

@@ -68,3 +68,42 @@ void reset_key_press(TipoTeclado *p_keypad){
   	p_keypad->teclaPulsada.col = -1;
 	p_keypad->teclaPulsada.row = -1;
 }
+void key_process(int ch)
+{
+  switch (ch)
+  {
+  case '1':
+    break;
+  case '2':
+	  HC_SR04_Start_trigger();
+    break;
+  case '3':
+    break;
+  case '4':
+    break;
+  case '5':
+    break;
+  case '6':
+    break;
+  case '7':
+    break;
+  case '8':
+    break;
+  case '9':
+    break;
+  case '10':
+    break;
+  case '11':
+    break;
+  case '12':
+    break;
+  case '13':
+    break;
+  case '14':
+    break;
+  case '15':
+    break;
+  case '16':
+    break;
+  }
+}
